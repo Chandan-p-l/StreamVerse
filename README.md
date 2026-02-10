@@ -199,7 +199,7 @@ Contributions are what make the open source community such an amazing place to l
 For backend development and API integration, please contact:
 
 **Chandan Pal**  
-📧 Email: chandanpal@gmail.com
+📧 Email: chandanpal2301@gmail.com
 
 I'm available for:
 - Backend API development
@@ -226,7 +226,7 @@ If you have any questions or need help:
 
 1. Check the [Issues](https://github.com/yourusername/streamverse/issues) section
 2. Create a new issue with a detailed description
-3. Contact me at chandanpal@gmail.com for backend development inquiries
+3. Contact me at chandanpal2301@gmail.com for backend development inquiries
 
 ## ⭐ Show Your Support
 
@@ -235,3 +235,4 @@ If you like this project, please give it a star! It helps others discover it.
 ---
 
 **Made with ❤️ by [Your Name]**
+
