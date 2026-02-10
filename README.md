@@ -21,7 +21,7 @@
 
 ## 🚀 Demo
 
-Live Demo: [https://yourusername.github.io/streamverse](https://yourusername.github.io/streamverse)
+Live Demo: [https://yourusername.github.io/streamverse](https://chandan-p-l.github.io/StreamVerse)
 
 ## 📸 Screenshots
 
@@ -235,4 +235,5 @@ If you like this project, please give it a star! It helps others discover it.
 ---
 
 **Made with ❤️ by [Your Name]**
+
 
