@@ -1,0 +1,33 @@
+{
+  "name": "streamverse",
+  "version": "1.0.0",
+  "description": "A Netflix-inspired movie streaming platform",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve .",
+    "dev": "serve . -p 3000",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "streaming",
+    "movies",
+    "netflix",
+    "frontend",
+    "html",
+    "css",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/streamverse.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/streamverse/issues"
+  },
+  "homepage": "https://github.com/yourusername/streamverse#readme",
+  "devDependencies": {
+    "serve": "^14.0.0"
+  }
+}

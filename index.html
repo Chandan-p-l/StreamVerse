@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="StreamVerse - A Netflix-inspired movie streaming platform with trending movies, TV shows, and personalized recommendations. Watch trailers, save your favorites, and discover new content.">
+    <meta name="keywords" content="movies, streaming, netflix, tv shows, trailers, entertainment, watch online">
+    <meta name="author" content="StreamVerse">
+    <meta name="theme-color" content="#E50914">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourusername.github.io/streamverse/">
+    <meta property="og:title" content="StreamVerse - Movie Streaming Platform">
+    <meta property="og:description" content="Discover and watch your favorite movies and TV shows with StreamVerse. Netflix-inspired streaming experience.">
+    <meta property="og:image" content="https://yourusername.github.io/streamverse/preview.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://yourusername.github.io/streamverse/">
+    <meta property="twitter:title" content="StreamVerse - Movie Streaming Platform">
+    <meta property="twitter:description" content="Discover and watch your favorite movies and TV shows with StreamVerse.">
+    <meta property="twitter:image" content="https://yourusername.github.io/streamverse/preview.jpg">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <title>StreamVerse - Movie Streaming Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --netflix-red: #E50914;
+            --dark-bg: #141414;
+            --card-hover-scale: 1.15;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #141414; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        .header-gradient {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+            transition: all 0.4s ease;
+        }
+        .header-black { background-color: #141414 !important; border-bottom: 1px solid #333; }
+
+        .hero-vignette {
+            background: linear-gradient(to top, var(--dark-bg) 5%, transparent 40%),
+                        linear-gradient(to right, var(--dark-bg) 0%, transparent 60%);
+        }
+
+        .movie-row {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            padding: 25px 0;
+            margin-top: -15px;
+        }
+        .movie-row::-webkit-scrollbar { display: none; }
+
+        .movie-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            z-index: 1;
+        }
+        .movie-card:hover {
+            transform: scale(var(--card-hover-scale));
+            z-index: 50;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .fade-in { animation: fadeIn 0.8s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-blur { backdrop-filter: blur(8px); }
+        
+        /* Hero Carousel Transition */
+        #hero-content { transition: opacity 0.5s ease-in-out; }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation Header -->
+    <nav id="main-nav" class="fixed top-0 w-full z-[60] px-4 md:px-12 py-3 flex items-center justify-between header-gradient">
+        <div class="flex items-center space-x-10">
+            <h1 class="text-3xl font-bold tracking-tighter text-red-600 uppercase cursor-pointer" onclick="location.reload()">StreamVerse</h1>
+            <ul class="hidden lg:flex space-x-5 text-sm font-medium items-center">
+                <li onclick="navigateTo('Home', this)" class="nav-item text-white cursor-pointer transition">Home</li>
+                <li onclick="navigateTo('TV Shows', this)" class="nav-item text-gray-400 hover:text-gray-200 cursor-pointer transition">TV Shows</li>
+                <li onclick="navigateTo('Movies', this)" class="nav-item text-gray-400 hover:text-gray-200 cursor-pointer transition">Movies</li>
+                <li onclick="navigateTo('New & Popular', this)" class="nav-item text-gray-400 hover:text-gray-200 cursor-pointer transition">New & Popular</li>
+                <li onclick="navigateTo('My List', this)" class="nav-item text-gray-400 hover:text-gray-200 cursor-pointer transition">My List</li>
+            </ul>
+        </div>
+        
+        <div class="flex items-center space-x-6 text-lg">
+            <div class="relative flex items-center">
+                <input type="text" id="search-input" placeholder="Titles, genres..." 
+                       class="bg-black/80 border border-white/20 px-3 py-1.5 text-sm rounded-sm transition-all w-0 focus:w-64 opacity-0 focus:opacity-100 outline-none absolute right-10">
+                <i class="fas fa-search cursor-pointer text-gray-300 hover:text-white" onclick="document.getElementById('search-input').focus()"></i>
+            </div>
+            <div class="relative group">
+                <i class="fas fa-bell cursor-pointer text-gray-300 hover:text-white"></i>
+                <span class="absolute -top-1 -right-1 bg-red-600 text-[10px] w-4 h-4 flex items-center justify-center rounded-full">3</span>
+            </div>
+            <div class="w-8 h-8 rounded overflow-hidden cursor-pointer border border-transparent hover:border-white transition">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png" alt="Profile">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- Dynamic Hero Section -->
+        <section id="hero" class="relative h-[85vh] w-full flex items-center px-4 md:px-12 overflow-hidden">
+            <div id="hero-bg" class="absolute inset-0 z-0 transition-all duration-1000">
+                <img id="hero-image" src="" alt="Hero" class="w-full h-full object-cover">
+                <div class="absolute inset-0 hero-vignette"></div>
+            </div>
+
+            <div id="hero-content" class="relative z-10 max-w-3xl mt-10">
+                <div class="flex items-center space-x-2 mb-2">
+                    <img src="https://www.netflix.com/favicon.ico" class="w-4 h-4" alt="N">
+                    <span class="text-xs font-bold tracking-[4px] text-gray-400 uppercase">Original Series</span>
+                </div>
+                <h1 id="hero-title" class="text-5xl md:text-7xl font-extrabold mb-4 drop-shadow-2xl"></h1>
+                <p id="hero-desc" class="text-base md:text-xl mb-8 line-clamp-3 text-gray-200 max-w-xl drop-shadow-lg font-light"></p>
+                <div class="flex space-x-4">
+                    <button onclick="handleHeroPlay()" class="bg-white text-black px-10 py-3 rounded-md font-bold flex items-center hover:bg-white/80 transition transform active:scale-95 shadow-xl">
+                        <i class="fas fa-play mr-3 text-xl"></i> Play
+                    </button>
+                    <!-- Fixed onclick handler: using openHeroDetails helper -->
+                    <button onclick="openHeroDetails()" class="bg-gray-500/40 text-white px-10 py-3 rounded-md font-bold flex items-center hover:bg-gray-500/60 transition backdrop-blur-md">
+                        <i class="fas fa-info-circle mr-3 text-xl"></i> More Info
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Genre Navigation (Added Feature) -->
+        <div class="sticky top-14 z-40 px-4 md:px-12 py-4 flex space-x-6 text-sm overflow-x-auto no-scrollbar bg-[#141414] border-b border-white/10 backdrop-blur-md">
+            <span onclick="filterByGenre('All', this)" class="genre-tab text-white font-bold cursor-pointer border-b-2 border-red-600 pb-1 whitespace-nowrap">All</span>
+            <span onclick="filterByGenre('Sci-Fi', this)" class="genre-tab text-gray-400 hover:text-white cursor-pointer transition pb-1 whitespace-nowrap">Sci-Fi</span>
+            <span onclick="filterByGenre('Action', this)" class="genre-tab text-gray-400 hover:text-white cursor-pointer transition pb-1 whitespace-nowrap">Action</span>
+            <span onclick="filterByGenre('Fantasy', this)" class="genre-tab text-gray-400 hover:text-white cursor-pointer transition pb-1 whitespace-nowrap">Fantasy</span>
+            <span onclick="filterByGenre('Documentaries', this)" class="genre-tab text-gray-400 hover:text-white cursor-pointer transition pb-1 whitespace-nowrap">Documentaries</span>
+        </div>
+
+        <!-- Dynamic Content Rows -->
+        <!-- Fixed: Changed -mt-16 to mt-4 to prevent overlap with genre bar -->
+        <div id="categories-container" class="relative mt-4 z-20 pb-20 space-y-12">
+            <!-- Content will be injected here -->
+        </div>
+    </main>
+
+    <!-- More Info / Details Modal (Enhanced Feature) -->
+    <div id="details-modal" class="fixed inset-0 z-[100] bg-black/80 hidden items-center justify-center p-4 modal-blur overflow-y-auto">
+        <div class="relative w-full max-w-4xl bg-[#181818] rounded-xl shadow-2xl overflow-hidden mt-10 mb-10">
+            <button onclick="closeDetails()" class="absolute top-5 right-5 text-white bg-black/50 w-10 h-10 rounded-full z-20 hover:bg-white hover:text-black transition">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div id="details-hero" class="h-96 relative">
+                <img id="details-img" src="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent"></div>
+                <div class="absolute bottom-10 left-10">
+                    <h2 id="details-title" class="text-4xl font-bold mb-4"></h2>
+                    <div class="flex space-x-3">
+                        <button onclick="openTrailer('dQw4w9WgXcQ')" class="bg-white text-black px-8 py-2 rounded font-bold hover:bg-white/80 transition">Play</button>
+                        <button onclick="toggleMyList(currentSelectedMovieId)" class="w-10 h-10 rounded-full border border-white/50 flex items-center justify-center hover:bg-white/10 transition">
+                            <i id="details-add-icon" class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-2 space-y-4">
+                    <div class="flex items-center space-x-3 text-sm">
+                        <span class="text-green-500 font-bold" id="details-match">98% Match</span>
+                        <span id="details-year">2023</span>
+                        <span class="border border-gray-500 px-1 text-[10px]">16+</span>
+                        <span>2h 15m</span>
+                        <span class="border border-gray-500 px-1 text-[10px]">HD</span>
+                    </div>
+                    <p id="details-desc" class="text-gray-300 leading-relaxed"></p>
+                </div>
+                <div class="text-sm space-y-3">
+                    <p><span class="text-gray-500">Cast:</span> <span id="details-cast">Leonardo DiCaprio, Joseph Gordon-Levitt, Elliot Page</span></p>
+                    <p><span class="text-gray-500">Genres:</span> Sci-Fi, Action, Thriller</p>
+                    <p><span class="text-gray-500">This show is:</span> Mind-bending, Exciting, Suspenseful</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div id="trailer-modal" class="fixed inset-0 z-[200] bg-black hidden flex items-center justify-center">
+        <button onclick="closeTrailer()" class="absolute top-10 right-10 text-white text-4xl hover:text-red-500 z-50">
+            <i class="fas fa-times"></i>
+        </button>
+        <div id="youtube-container" class="w-full h-full"></div>
+    </div>
+
+    <!-- Custom Toasts -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-white text-black px-8 py-4 rounded shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[300] flex items-center space-x-3 translate-y-10">
+        <i class="fas fa-check-circle text-green-500"></i>
+        <span id="toast-text" class="font-bold">Added to My List</span>
+    </div>
+
+    <script>
+        // --- Enhanced Data Service ---
+        const MOVIE_DATA = [
+            {
+                id: 1, title: "Inception", category: "Trending Now", type: "Movies",
+                image: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?auto=format&fit=crop&q=80&w=800",
+                hero: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?auto=format&fit=crop&q=80&w=1920",
+                rating: "98% Match", year: "2010", cast: "Leonardo DiCaprio, Cillian Murphy",
+                desc: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O."
+            },
+            {
+                id: 2, title: "The Dark Knight", category: "Trending Now", type: "Movies",
+                image: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&q=80&w=800",
+                hero: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&q=80&w=1920",
+                rating: "99% Match", year: "2008", cast: "Christian Bale, Heath Ledger",
+                desc: "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets."
+            },
+            {
+                id: 3, title: "Interstellar", category: "Sci-Fi Hits", type: "Movies",
+                image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=800",
+                hero: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=1920",
+                rating: "95% Match", year: "2014", cast: "Matthew McConaughey, Anne Hathaway",
+                desc: "When Earth becomes uninhabitable, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans."
+            },
+            {
+                id: 4, title: "The Witcher", category: "TV Shows", type: "TV Shows",
+                image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=800",
+                hero: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=1920",
+                rating: "91% Match", year: "2019", cast: "Henry Cavill, Anya Chalotra",
+                desc: "The witcher Geralt, a mutated monster hunter, struggles to find his place in a world where people often prove more wicked than beasts."
+            }
+        ];
+
+        const CATEGORIES = ["Trending Now", "Sci-Fi Hits", "TV Shows", "Award Winning"];
+        let myList = [];
+        let currentHeroIndex = 0;
+        let currentSelectedMovieId = null;
+        let currentNav = 'Home';
+        let currentGenre = 'All';
+
+        // --- Application State Control ---
+
+        function initApp() {
+            renderHero();
+            renderCategories();
+            startHeroCarousel();
+            window.addEventListener('scroll', handleScroll);
+        }
+
+        // --- Feature: Hero Carousel ---
+        function renderHero() {
+            const featured = MOVIE_DATA[currentHeroIndex];
+            const content = document.getElementById('hero-content');
+            
+            content.style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('hero-image').src = featured.hero;
+                document.getElementById('hero-title').innerText = featured.title;
+                document.getElementById('hero-desc').innerText = featured.desc;
+                content.style.opacity = '1';
+            }, 500);
+        }
+
+        function startHeroCarousel() {
+            setInterval(() => {
+                currentHeroIndex = (currentHeroIndex + 1) % MOVIE_DATA.length;
+                renderHero();
+            }, 8000);
+        }
+
+        // --- Feature: Navigation Filtering ---
+        function navigateTo(section, element) {
+            currentNav = section;
+            
+            // Update Nav UI state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('text-white');
+                item.classList.add('text-gray-400');
+            });
+            element.classList.remove('text-gray-400');
+            element.classList.add('text-white');
+
+            renderCategories();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function filterByGenre(genre, element) {
+            currentGenre = genre;
+            
+            // Update Genre UI state
+            document.querySelectorAll('.genre-tab').forEach(item => {
+                item.classList.remove('text-white', 'font-bold', 'border-b-2', 'border-red-600');
+                item.classList.add('text-gray-400');
+            });
+            element.classList.remove('text-gray-400');
+            element.classList.add('text-white', 'font-bold', 'border-b-2', 'border-red-600');
+
+            renderCategories();
+        }
+
+        // --- Feature: Dynamic Rows & My List ---
+        function renderCategories() {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+
+            // 1. Filtered View: My List
+            if (currentNav === 'My List') {
+                container.appendChild(createSection("My List", myList));
+                if (myList.length === 0) {
+                    container.innerHTML = `<div class="px-4 md:px-12 py-20 text-center text-gray-500">Your list is empty. Add titles to see them here!</div>`;
+                }
+                return;
+            }
+
+            // 2. Filtered View: Home / Movies / TV Shows
+            if (myList.length > 0 && currentNav === 'Home') {
+                container.appendChild(createSection("My List", myList));
+            }
+
+            CATEGORIES.forEach(cat => {
+                let movies = MOVIE_DATA.filter(m => m.category === cat || Math.random() > 0.4);
+                
+                // Apply Main Nav Filter (Movies vs TV Shows)
+                if (currentNav === 'Movies') movies = movies.filter(m => m.type === 'Movies');
+                if (currentNav === 'TV Shows') movies = movies.filter(m => m.type === 'TV Shows');
+
+                // Apply Genre Sub-nav Filter (Mock logic for demo)
+                if (currentGenre !== 'All') {
+                    // In a real app we'd check movie.genres. Includes(currentGenre)
+                    // For this demo, we'll just show random subsets if filtering
+                    movies = movies.filter((_, i) => i % 2 === 0);
+                }
+
+                if (movies.length > 0) {
+                    container.appendChild(createSection(cat, movies));
+                }
+            });
+        }
+
+        function createSection(title, movies) {
+            const section = document.createElement('section');
+            section.className = 'px-4 md:px-12 fade-in';
+            section.innerHTML = `
+                <h2 class="text-xl md:text-2xl font-bold mb-2 flex items-center">
+                    ${title} <i class="fas fa-chevron-right text-xs ml-3 text-gray-500 hover:text-white cursor-pointer transition"></i>
+                </h2>
+                <div class="movie-row space-x-2 md:space-x-3">
+                    ${movies.map(movie => createMovieCard(movie)).join('')}
+                </div>
+            `;
+            return section;
+        }
+
+        function createMovieCard(movie) {
+            const isInList = myList.some(m => m.id === movie.id);
+            return `
+                <div class="movie-card relative flex-none w-[180px] md:w-[280px] h-[100px] md:h-[157px] rounded bg-gray-800 overflow-hidden" 
+                     onclick="openDetails(${movie.id})">
+                    <img src="${movie.image}" alt="${movie.title}" class="w-full h-full object-cover">
+                    
+                    <div class="absolute inset-0 bg-black/70 opacity-0 hover:opacity-100 transition-all duration-300 p-4 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div class="flex space-x-2">
+                                <button onclick="event.stopPropagation(); openTrailer('dQw4w9WgXcQ')" class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 shadow-lg">
+                                    <i class="fas fa-play text-[10px]"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); toggleMyList(${movie.id})" class="w-8 h-8 rounded-full border border-white/50 text-white flex items-center justify-center hover:border-white transition">
+                                    <i class="fas ${isInList ? 'fa-check' : 'fa-plus'} text-[10px]"></i>
+                                </button>
+                            </div>
+                            <button onclick="event.stopPropagation(); openDetails(${movie.id})" class="w-8 h-8 rounded-full border border-white/50 text-white flex items-center justify-center hover:border-white transition">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div>
+                            <p class="text-[12px] font-bold text-green-400 mb-1">${movie.rating}</p>
+                            <div class="flex items-center space-x-2 text-[10px] text-gray-300">
+                                <span class="border border-gray-500 px-1">16+</span>
+                                <span>2h 15m</span>
+                                <span class="border border-gray-500 px-1">HD</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Interaction Logic ---
+
+        function toggleMyList(movieId) {
+            const movie = MOVIE_DATA.find(m => m.id === movieId);
+            const index = myList.findIndex(m => m.id === movieId);
+            
+            if (index === -1) {
+                myList.push(movie);
+                showToast("Added to My List");
+            } else {
+                myList.splice(index, 1);
+                showToast("Removed from My List");
+            }
+            renderCategories();
+            
+            // Sync details modal icon if open
+            const icon = document.getElementById('details-add-icon');
+            if(icon) {
+                icon.className = myList.some(m => m.id === movieId) ? 'fas fa-check' : 'fas fa-plus';
+            }
+        }
+
+        // Helper for the Hero "More Info" button
+        function openHeroDetails() {
+            const movie = MOVIE_DATA[currentHeroIndex];
+            if (movie) openDetails(movie.id);
+        }
+
+        // Standardized openDetails function
+        function openDetails(movieId) {
+            const movie = MOVIE_DATA.find(m => m.id === movieId);
+            if (!movie) return;
+
+            currentSelectedMovieId = movieId;
+            
+            document.getElementById('details-img').src = movie.hero;
+            document.getElementById('details-title').innerText = movie.title;
+            document.getElementById('details-desc').innerText = movie.desc;
+            document.getElementById('details-year').innerText = movie.year;
+            document.getElementById('details-cast').innerText = movie.cast;
+            document.getElementById('details-match').innerText = movie.rating;
+            
+            const addIcon = document.getElementById('details-add-icon');
+            addIcon.className = myList.some(m => m.id === movieId) ? 'fas fa-check' : 'fas fa-plus';
+
+            document.getElementById('details-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDetails() {
+            document.getElementById('details-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function handleHeroPlay() {
+            openTrailer('dQw4w9WgXcQ');
+        }
+
+        function openTrailer(videoId) {
+            const modal = document.getElementById('trailer-modal');
+            const container = document.getElementById('youtube-container');
+            container.innerHTML = `
+                <iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0" 
+                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+                </iframe>`;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTrailer() {
+            document.getElementById('trailer-modal').classList.add('hidden');
+            document.getElementById('youtube-container').innerHTML = '';
+            document.body.style.overflow = 'auto';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = message;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, -20px)';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, 40px)';
+            }, 2500);
+        }
+
+        function handleScroll() {
+            const nav = document.getElementById('main-nav');
+            if (window.scrollY > 80) nav.classList.add('header-black');
+            else nav.classList.remove('header-black');
+        }
+
+        window.onload = initApp;
+
+        // Search logic
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            if(!term) { renderCategories(); return; }
+            const filtered = MOVIE_DATA.filter(m => m.title.toLowerCase().includes(term));
+            const container = document.getElementById('categories-container');
+            container.innerHTML = createSection(`Search results for "${term}"`, filtered).outerHTML;
+        });
+    </script>
+</body>
+</html>

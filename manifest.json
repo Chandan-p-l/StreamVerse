@@ -1,0 +1,21 @@
+{
+  "short_name": "StreamVerse",
+  "name": "StreamVerse - Movie Streaming Platform",
+  "description": "A Netflix-inspired movie streaming platform with modern UI",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#E50914",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
